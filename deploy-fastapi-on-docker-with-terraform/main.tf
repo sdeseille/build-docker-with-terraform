@@ -2,15 +2,15 @@ terraform {
   required_providers {
     docker = {
       source  = "kreuzwerker/docker"
-      version = "~> 2.13.0"
+      version = "~> 2.23.1"
     }
   }
 }
 
 provider "docker" {}
 
-resource "docker_image" "fastapi-tuto" {
-  name = "fastapi-tuto"
+resource "docker_image" "fastapi_tuto" {
+  name = "fastapi_tuto"
   build {
     path = "."
   }
@@ -19,9 +19,9 @@ resource "docker_image" "fastapi-tuto" {
   }
 }
 
-resource "docker_container" "fastapi-tuto" {
-  image = docker_image.fastapi-tuto
-  name  = "fastapi-tuto"
+resource "docker_container" "fastapi_tuto" {
+  image = docker_image.fastapi_tuto.image_id
+  name  = "fastapi_tuto"
   ports {
     internal = 80
     external = 8000

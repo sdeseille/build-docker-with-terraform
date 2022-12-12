@@ -790,3 +790,557 @@ Je me base sur les documentations suivantes:
 
 - <https://registry.terraform.io/providers/kreuzwerker/docker/latest/docs/resources/image>
 - <https://fastapi.tiangolo.com/deployment/docker/#build-a-docker-image-for-fastapi>
+
+La version que j'utilisais du provider terraform était trop ancienne (versions matching "~> 2.13.0") et ne gérait pas l'attribut trigger.
+
+```raw
+vagrant@ubuntu-jammy:/vagrant/build-docker-with-terraform/deploy-fastapi-on-docker-with-terraform$ sudo terraform plan
+╷
+│ Error: Unsupported argument
+│
+│   on main.tf line 17, in resource "docker_image" "fastapi-tuto":
+│   17:   triggers = {
+│
+│ An argument named "triggers" is not expected here.
+╵
+```
+
+J'ai donc réalisé un upgrade du provider avec la commande:
+
+```raw
+terraform init -upgrade
+```
+
+Résultat:
+
+```raw
+vagrant@ubuntu-jammy:/vagrant/build-docker-with-terraform/deploy-fastapi-on-docker-with-terraform$ terraform init -upgrade
+
+Initializing the backend...
+
+Initializing provider plugins...
+- Finding kreuzwerker/docker versions matching "~> 2.23.1"...
+- Installing kreuzwerker/docker v2.23.1...
+- Installed kreuzwerker/docker v2.23.1 (self-signed, key ID BD080C4571C6104C)
+
+Partner and community providers are signed by their developers.
+If you'd like to know more about provider signing, you can read about it here:
+https://www.terraform.io/docs/cli/plugins/signing.html
+
+Terraform has made some changes to the provider dependency selections recorded
+in the .terraform.lock.hcl file. Review those changes and commit them to your
+version control system if they represent changes you intended to make.
+
+Terraform has been successfully initialized!
+
+You may now begin working with Terraform. Try running "terraform plan" to see
+any changes that are required for your infrastructure. All Terraform commands
+should now work.
+
+If you ever set or change modules or backend configuration for Terraform,
+rerun this command to reinitialize your working directory. If you forget, other
+commands will detect it and remind you to do so if necessary.
+```
+
+### Validation de la syntaxe Terraform
+
+On utilise la commande:
+
+```raw
+sudo terraform validate
+```
+
+Résultat:
+
+```raw
+vagrant@ubuntu-jammy:/vagrant/build-docker-with-terraform/deploy-fastapi-on-docker-with-terraform$ sudo terraform validate
+Success! The configuration is valid.
+```
+
+### Vérification des ressources à déployer pour FastAPI
+
+On utilise la commande:
+
+```raw
+sudo terraform plan
+```
+
+Résultat:
+
+```raw
+vagrant@ubuntu-jammy:/vagrant/build-docker-with-terraform/deploy-fastapi-on-docker-with-terraform$ sudo terraform plan
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # docker_container.fastapi_tuto will be created
+  + resource "docker_container" "fastapi_tuto" {
+      + attach                                      = false
+      + bridge                                      = (known after apply)
+      + command                                     = (known after apply)
+      + container_logs                              = (known after apply)
+      + container_read_refresh_timeout_milliseconds = 15000
+      + entrypoint                                  = (known after apply)
+      + env                                         = (known after apply)
+      + exit_code                                   = (known after apply)
+      + gateway                                     = (known after apply)
+      + hostname                                    = (known after apply)
+      + id                                          = (known after apply)
+      + image                                       = (known after apply)
+      + init                                        = (known after apply)
+      + ip_address                                  = (known after apply)
+      + ip_prefix_length                            = (known after apply)
+      + ipc_mode                                    = (known after apply)
+      + log_driver                                  = (known after apply)
+      + logs                                        = false
+      + must_run                                    = true
+      + name                                        = "fastapi_tuto"
+      + network_data                                = (known after apply)
+      + read_only                                   = false
+      + remove_volumes                              = true
+      + restart                                     = "no"
+      + rm                                          = false
+      + runtime                                     = (known after apply)
+      + security_opts                               = (known after apply)
+      + shm_size                                    = (known after apply)
+      + start                                       = true
+      + stdin_open                                  = false
+      + stop_signal                                 = (known after apply)
+      + stop_timeout                                = (known after apply)
+      + tty                                         = false
+      + wait                                        = false
+      + wait_timeout                                = 60
+
+      + healthcheck {
+          + interval     = (known after apply)
+          + retries      = (known after apply)
+          + start_period = (known after apply)
+          + test         = (known after apply)
+          + timeout      = (known after apply)
+        }
+
+      + labels {
+          + label = (known after apply)
+          + value = (known after apply)
+        }
+
+      + ports {
+          + external = 8000
+          + internal = 80
+          + ip       = "0.0.0.0"
+          + protocol = "tcp"
+        }
+    }
+
+  # docker_image.fastapi_tuto will be created
+  + resource "docker_image" "fastapi_tuto" {
+      + id          = (known after apply)
+      + image_id    = (known after apply)
+      + latest      = (known after apply)
+      + name        = "fastapi_tuto"
+      + output      = (known after apply)
+      + repo_digest = (known after apply)
+      + triggers    = {
+          + "dir_sha1" = "68953d31ac294587cbdc1090ad6c511c3337cafd"
+        }
+
+      + build {
+          + dockerfile = "Dockerfile"
+          + path       = "."
+          + remove     = true
+          + tag        = []
+        }
+    }
+
+Plan: 2 to add, 0 to change, 0 to destroy.
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+Note: You didn't use the -out option to save this plan, so Terraform can't guarantee to take exactly these actions if you run "terraform apply" now.
+vagrant@ubuntu-jammy:/vagrant/build-docker-with-terraform/deploy-fastapi-on-docker-with-terraform$
+```
+
+### Déploiement de FastAPI via Terraform
+
+On utilise la commande:
+
+```raw
+sudo terraform apply
+```
+
+Résultat:
+
+```raw
+vagrant@ubuntu-jammy:/vagrant/build-docker-with-terraform/deploy-fastapi-on-docker-with-terraform$ sudo terraform apply
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # docker_container.fastapi_tuto will be created
+  + resource "docker_container" "fastapi_tuto" {
+      + attach                                      = false
+      + bridge                                      = (known after apply)
+      + command                                     = (known after apply)
+      + container_logs                              = (known after apply)
+      + container_read_refresh_timeout_milliseconds = 15000
+      + entrypoint                                  = (known after apply)
+      + env                                         = (known after apply)
+      + exit_code                                   = (known after apply)
+      + gateway                                     = (known after apply)
+      + hostname                                    = (known after apply)
+      + id                                          = (known after apply)
+      + image                                       = (known after apply)
+      + init                                        = (known after apply)
+      + ip_address                                  = (known after apply)
+      + ip_prefix_length                            = (known after apply)
+      + ipc_mode                                    = (known after apply)
+      + log_driver                                  = (known after apply)
+      + logs                                        = false
+      + must_run                                    = true
+      + name                                        = "fastapi_tuto"
+      + network_data                                = (known after apply)
+      + read_only                                   = false
+      + remove_volumes                              = true
+      + restart                                     = "no"
+      + rm                                          = false
+      + runtime                                     = (known after apply)
+      + security_opts                               = (known after apply)
+      + shm_size                                    = (known after apply)
+      + start                                       = true
+      + stdin_open                                  = false
+      + stop_signal                                 = (known after apply)
+      + stop_timeout                                = (known after apply)
+      + tty                                         = false
+      + wait                                        = false
+      + wait_timeout                                = 60
+
+      + healthcheck {
+          + interval     = (known after apply)
+          + retries      = (known after apply)
+          + start_period = (known after apply)
+          + test         = (known after apply)
+          + timeout      = (known after apply)
+        }
+
+      + labels {
+          + label = (known after apply)
+          + value = (known after apply)
+        }
+
+      + ports {
+          + external = 8000
+          + internal = 80
+          + ip       = "0.0.0.0"
+          + protocol = "tcp"
+        }
+    }
+
+  # docker_image.fastapi_tuto will be created
+  + resource "docker_image" "fastapi_tuto" {
+      + id          = (known after apply)
+      + image_id    = (known after apply)
+      + latest      = (known after apply)
+      + name        = "fastapi_tuto"
+      + output      = (known after apply)
+      + repo_digest = (known after apply)
+      + triggers    = {
+          + "dir_sha1" = "68953d31ac294587cbdc1090ad6c511c3337cafd"
+        }
+
+      + build {
+          + dockerfile = "Dockerfile"
+          + path       = "."
+          + remove     = true
+          + tag        = []
+        }
+    }
+
+Plan: 2 to add, 0 to change, 0 to destroy.
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+docker_image.fastapi_tuto: Creating...
+docker_image.fastapi_tuto: Still creating... [10s elapsed]
+docker_image.fastapi_tuto: Still creating... [20s elapsed]
+docker_image.fastapi_tuto: Still creating... [30s elapsed]
+docker_image.fastapi_tuto: Still creating... [40s elapsed]
+docker_image.fastapi_tuto: Still creating... [50s elapsed]
+docker_image.fastapi_tuto: Still creating... [1m0s elapsed]
+docker_image.fastapi_tuto: Still creating... [1m10s elapsed]
+docker_image.fastapi_tuto: Still creating... [1m20s elapsed]
+docker_image.fastapi_tuto: Still creating... [1m30s elapsed]
+docker_image.fastapi_tuto: Still creating... [1m40s elapsed]
+docker_image.fastapi_tuto: Still creating... [1m50s elapsed]
+docker_image.fastapi_tuto: Still creating... [2m0s elapsed]
+docker_image.fastapi_tuto: Still creating... [2m10s elapsed]
+docker_image.fastapi_tuto: Still creating... [2m20s elapsed]
+docker_image.fastapi_tuto: Still creating... [2m30s elapsed]
+docker_image.fastapi_tuto: Still creating... [2m40s elapsed]
+docker_image.fastapi_tuto: Still creating... [2m50s elapsed]
+docker_image.fastapi_tuto: Still creating... [3m0s elapsed]
+docker_image.fastapi_tuto: Still creating... [3m10s elapsed]
+docker_image.fastapi_tuto: Still creating... [3m20s elapsed]
+docker_image.fastapi_tuto: Still creating... [3m30s elapsed]
+docker_image.fastapi_tuto: Still creating... [3m40s elapsed]
+docker_image.fastapi_tuto: Still creating... [3m50s elapsed]
+docker_image.fastapi_tuto: Still creating... [4m0s elapsed]
+docker_image.fastapi_tuto: Still creating... [4m10s elapsed]
+docker_image.fastapi_tuto: Still creating... [4m20s elapsed]
+docker_image.fastapi_tuto: Still creating... [4m30s elapsed]
+docker_image.fastapi_tuto: Still creating... [4m40s elapsed]
+docker_image.fastapi_tuto: Creation complete after 4m47s [id=sha256:994862c9842a42f27097de7c2f666d05ce895830fb83acff3325815e8a0dded8fastapi_tuto]
+docker_container.fastapi_tuto: Creating...
+╷
+│ Error: Unable to create container with image sha256:994862c9842a42f27097de7c2f666d05ce895830fb83acff3325815e8a0dded8fastapi_tuto: unable to pull image sha256:994862c9842a42f27097de7c2f666d05ce895830fb83acff3325815e8a0dded8fastapi_tuto: error pulling image sha256:994862c9842a42f27097de7c2f666d05ce895830fb83acff3325815e8a0dded8fastapi_tuto: Error response from daemon: pull access denied for sha256, repository does not exist or may require 'docker login': denied: requested access to the resource is denied
+│
+│   with docker_container.fastapi_tuto,
+│   on main.tf line 22, in resource "docker_container" "fastapi_tuto":
+│   22: resource "docker_container" "fastapi_tuto" {
+│
+╵
+vagrant@ubuntu-jammy:/vagrant/build-docker-with-terraform/deploy-fastapi-on-docker-with-terraform$
+```
+
+L'erreur était liée au fait que j'ai utilisé l'attribut [**id**] pour référencer l'image docker construite dans le step Build de docker. Il faut utiliser l'attribut [**image_id**]. Après correction du fichier terraform voici le résultat.
+
+```raw
+vagrant@ubuntu-jammy:/vagrant/build-docker-with-terraform/deploy-fastapi-on-docker-with-terraform$ sudo terraform apply
+docker_image.fastapi_tuto: Refreshing state... [id=sha256:994862c9842a42f27097de7c2f666d05ce895830fb83acff3325815e8a0dded8fastapi_tuto]
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # docker_container.fastapi_tuto will be created
+  + resource "docker_container" "fastapi_tuto" {
+      + attach                                      = false
+      + bridge                                      = (known after apply)
+      + command                                     = (known after apply)
+      + container_logs                              = (known after apply)
+      + container_read_refresh_timeout_milliseconds = 15000
+      + entrypoint                                  = (known after apply)
+      + env                                         = (known after apply)
+      + exit_code                                   = (known after apply)
+      + gateway                                     = (known after apply)
+      + hostname                                    = (known after apply)
+      + id                                          = (known after apply)
+      + image                                       = "sha256:994862c9842a42f27097de7c2f666d05ce895830fb83acff3325815e8a0dded8"
+      + init                                        = (known after apply)
+      + ip_address                                  = (known after apply)
+      + ip_prefix_length                            = (known after apply)
+      + ipc_mode                                    = (known after apply)
+      + log_driver                                  = (known after apply)
+      + logs                                        = false
+      + must_run                                    = true
+      + name                                        = "fastapi_tuto"
+      + network_data                                = (known after apply)
+      + read_only                                   = false
+      + remove_volumes                              = true
+      + restart                                     = "no"
+      + rm                                          = false
+      + runtime                                     = (known after apply)
+      + security_opts                               = (known after apply)
+      + shm_size                                    = (known after apply)
+      + start                                       = true
+      + stdin_open                                  = false
+      + stop_signal                                 = (known after apply)
+      + stop_timeout                                = (known after apply)
+      + tty                                         = false
+      + wait                                        = false
+      + wait_timeout                                = 60
+
+      + healthcheck {
+          + interval     = (known after apply)
+          + retries      = (known after apply)
+          + start_period = (known after apply)
+          + test         = (known after apply)
+          + timeout      = (known after apply)
+        }
+
+      + labels {
+          + label = (known after apply)
+          + value = (known after apply)
+        }
+
+      + ports {
+          + external = 8000
+          + internal = 80
+          + ip       = "0.0.0.0"
+          + protocol = "tcp"
+        }
+    }
+
+Plan: 1 to add, 0 to change, 0 to destroy.
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+docker_container.fastapi_tuto: Creating...
+docker_container.fastapi_tuto: Creation complete after 1s [id=a49b2b3c14be96f40852be4184a288b97bb2487a3703ab04e2dde21e857e94b0]
+
+Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
+vagrant@ubuntu-jammy:/vagrant/build-docker-with-terraform/deploy-fastapi-on-docker-with-terraform$
+```
+
+### Validation de l'appli FastAPI
+
+On utilise la commande:
+
+```raw
+curl 127.0.0.1:8000/items/5?q=somequery
+```
+
+Résultat:
+
+```raw
+vagrant@ubuntu-jammy:/vagrant/build-docker-with-terraform/deploy-fastapi-on-docker-with-terraform$ curl 127.0.0.1:8000/items/5?q=somequery
+{"item_id":5,"q":"somequery"}vagrant@ubuntu-jammy:/vagrant/build-docker-with-terraform/deploy-fastapi-on-docker-with-terraform$
+```
+
+### Destruction des ressources FastAPI
+
+On utilise la commande:
+
+```raw
+sudo terraform destroy
+```
+
+Résultat:
+
+```raw
+vagrant@ubuntu-jammy:/vagrant/build-docker-with-terraform/deploy-fastapi-on-docker-with-terraform$ sudo terraform destroy
+docker_image.fastapi_tuto: Refreshing state... [id=sha256:994862c9842a42f27097de7c2f666d05ce895830fb83acff3325815e8a0dded8fastapi_tuto]
+docker_container.fastapi_tuto: Refreshing state... [id=a49b2b3c14be96f40852be4184a288b97bb2487a3703ab04e2dde21e857e94b0]
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+  - destroy
+
+Terraform will perform the following actions:
+
+  # docker_container.fastapi_tuto will be destroyed
+  - resource "docker_container" "fastapi_tuto" {
+      - attach                                      = false -> null
+      - command                                     = [
+          - "uvicorn",
+          - "app.main:app",
+          - "--proxy-headers",
+          - "--host",
+          - "0.0.0.0",
+          - "--port",
+          - "80",
+        ] -> null
+      - container_read_refresh_timeout_milliseconds = 15000 -> null
+      - cpu_shares                                  = 0 -> null
+      - dns                                         = [] -> null
+      - dns_opts                                    = [] -> null
+      - dns_search                                  = [] -> null
+      - entrypoint                                  = [] -> null
+      - env                                         = [] -> null
+      - gateway                                     = "172.17.0.1" -> null
+      - group_add                                   = [] -> null
+      - hostname                                    = "a49b2b3c14be" -> null
+      - id                                          = "a49b2b3c14be96f40852be4184a288b97bb2487a3703ab04e2dde21e857e94b0" -> null
+      - image                                       = "sha256:994862c9842a42f27097de7c2f666d05ce895830fb83acff3325815e8a0dded8" -> null
+      - init                                        = false -> null
+      - ip_address                                  = "172.17.0.3" -> null
+      - ip_prefix_length                            = 16 -> null
+      - ipc_mode                                    = "private" -> null
+      - links                                       = [] -> null
+      - log_driver                                  = "json-file" -> null
+      - log_opts                                    = {} -> null
+      - logs                                        = false -> null
+      - max_retry_count                             = 0 -> null
+      - memory                                      = 0 -> null
+      - memory_swap                                 = 0 -> null
+      - must_run                                    = true -> null
+      - name                                        = "fastapi_tuto" -> null
+      - network_data                                = [
+          - {
+              - gateway                   = "172.17.0.1"
+              - global_ipv6_address       = ""
+              - global_ipv6_prefix_length = 0
+              - ip_address                = "172.17.0.3"
+              - ip_prefix_length          = 16
+              - ipv6_gateway              = ""
+              - network_name              = "bridge"
+            },
+        ] -> null
+      - network_mode                                = "default" -> null
+      - privileged                                  = false -> null
+      - publish_all_ports                           = false -> null
+      - read_only                                   = false -> null
+      - remove_volumes                              = true -> null
+      - restart                                     = "no" -> null
+      - rm                                          = false -> null
+      - runtime                                     = "runc" -> null
+      - security_opts                               = [] -> null
+      - shm_size                                    = 64 -> null
+      - start                                       = true -> null
+      - stdin_open                                  = false -> null
+      - stop_timeout                                = 0 -> null
+      - storage_opts                                = {} -> null
+      - sysctls                                     = {} -> null
+      - tmpfs                                       = {} -> null
+      - tty                                         = false -> null
+      - wait                                        = false -> null
+      - wait_timeout                                = 60 -> null
+      - working_dir                                 = "/code" -> null
+
+      - ports {
+          - external = 8000 -> null
+          - internal = 80 -> null
+          - ip       = "0.0.0.0" -> null
+          - protocol = "tcp" -> null
+        }
+    }
+
+  # docker_image.fastapi_tuto will be destroyed
+  - resource "docker_image" "fastapi_tuto" {
+      - id       = "sha256:994862c9842a42f27097de7c2f666d05ce895830fb83acff3325815e8a0dded8fastapi_tuto" -> null
+      - image_id = "sha256:994862c9842a42f27097de7c2f666d05ce895830fb83acff3325815e8a0dded8" -> null
+      - latest   = "sha256:994862c9842a42f27097de7c2f666d05ce895830fb83acff3325815e8a0dded8" -> null
+      - name     = "fastapi_tuto" -> null
+      - triggers = {
+          - "dir_sha1" = "68953d31ac294587cbdc1090ad6c511c3337cafd"
+        } -> null
+
+      - build {
+          - build_arg    = {} -> null
+          - dockerfile   = "Dockerfile" -> null
+          - force_remove = false -> null
+          - label        = {} -> null
+          - no_cache     = false -> null
+          - path         = "." -> null
+          - remove       = true -> null
+          - tag          = [] -> null
+        }
+    }
+
+Plan: 0 to add, 0 to change, 2 to destroy.
+
+Do you really want to destroy all resources?
+  Terraform will destroy all your managed infrastructure, as shown above.
+  There is no undo. Only 'yes' will be accepted to confirm.
+
+  Enter a value: yes
+
+docker_container.fastapi_tuto: Destroying... [id=a49b2b3c14be96f40852be4184a288b97bb2487a3703ab04e2dde21e857e94b0]
+docker_container.fastapi_tuto: Destruction complete after 0s
+docker_image.fastapi_tuto: Destroying... [id=sha256:994862c9842a42f27097de7c2f666d05ce895830fb83acff3325815e8a0dded8fastapi_tuto]
+docker_image.fastapi_tuto: Destruction complete after 0s
+
+Destroy complete! Resources: 2 destroyed.
+vagrant@ubuntu-jammy:/vagrant/build-docker-with-terraform/deploy-fastapi-on-docker-with-terraform$
+```

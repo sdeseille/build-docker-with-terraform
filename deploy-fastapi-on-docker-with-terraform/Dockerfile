@@ -12,9 +12,10 @@ COPY ./requirements.txt /code/requirements.txt
 # The --upgrade option tells pip to upgrade the packages if they are already installed.
 RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 
-# Copy the main.py file to the /code directory directly (without any ./app directory).
-COPY ./main.py /code/
+# Copy the ./app directory inside the /code directory.
+# As this has all the code which is what changes most frequently the Docker cache won't be used for this or any following steps easily.
+COPY ./app /code/app
 
-# Run Uvicorn and tell it to import the app object from main (instead of importing from app.main).
+# Set the command to run the uvicorn server.
 # If you are running your container behind a TLS Termination Proxy (load balancer) like Nginx or Traefik, add the option --proxy-headers, this will tell Uvicorn to trust the headers sent by that proxy telling it that the application is running behind HTTPS, etc.
-CMD ["uvicorn", "main:app", "--proxy-headers", "--host", "0.0.0.0", "--port", "80"]
+CMD ["uvicorn", "app.main:app", "--proxy-headers", "--host", "0.0.0.0", "--port", "80"]
