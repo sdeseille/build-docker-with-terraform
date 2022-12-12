@@ -783,3 +783,10 @@ docker_image.nginx: Destruction complete after 0s
 Destroy complete! Resources: 2 destroyed.
 vagrant@ubuntu-jammy:/vagrant/build-docker-with-terraform/learn-terraform-docker-container$
 ```
+
+## Déploiement FastAPI avec Terraform
+
+Je me base sur les documentations suivantes:
+
+- <https://registry.terraform.io/providers/kreuzwerker/docker/latest/docs/resources/image>
+- <https://fastapi.tiangolo.com/deployment/docker/#build-a-docker-image-for-fastapi>
